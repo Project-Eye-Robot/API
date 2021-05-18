@@ -1,26 +1,20 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request,jsonify, render_template, Response
 from gpiozero import LED
 from time import *
 import os
-import subprocess
-#from MotorModule import Motor
+import threading
+from camera import VideoCamera
+from MotorModule import Motor
 #from picamera import PiCamera
-from time import sleep
-# import the necessary packages
-from picamera.array import PiRGBArray
-from picamera import PiCamera
-import time
-import cv2
+
+pi_camera = VideoCamera(flip=False)
 
 app = Flask(__name__)
 
-#led = LED(17)
-#motor = Motor(2,3,4,17,22,27)
+#led = LED(23)
+motor = Motor(2,3,4,17,27,22)
 #camera = PiCamera()
 #camera.close()
-
-#raspivid = subprocess.Popen("raspivid -o video/" + time.strftime("%d_%b_%Y_%H_%M_%S") + " -t 36000000", shell=True)
-#os.kill(raspivid.pid, signal.SIGKILL)
 
 @app.route('/')
 def index():
@@ -42,33 +36,43 @@ def on():
 def off():
     return led.off()
 
-#@app.route('/motor2', methods=['GET'])
-#def motor2():
-    #motor.move(0.6,0,2)
-    #motor.stop(2)
+@app.route('/F',methods=['GET'])
+def Forward():
+    motor.move(0.4,0,0.1)
+    motor.stop(2)
 
-@app.route('/cameraShow', methods=['GET'])
-def cameraShow():
-    # initialize the camera and grab a reference to the raw camera capture
-    camera = PiCamera()
-    camera.resolution = (640, 480)
-    camera.framerate = 32
-    rawCapture = PiRGBArray(camera, size=(640, 480))
-    # allow the camera to warmup
-    time.sleep(0.1)
-    # capture frames from the camera
-    for frame in camera.capture_continuous(rawCapture, format="bgr", use_video_port=True):
-        # grab the raw NumPy array representing the image, then initialize the timestamp
-        # and occupied/unoccupied text
-        image = frame.array
-        # show the frame
-        cv2.imshow("Frame", image)
-        key = cv2.waitKey(1) & 0xFF
-        # clear the stream in preparation for the next frame
-        rawCapture.truncate(0)
-        # if the `q` key was pressed, break from the loop
-        if key == ord("q"):
-            break
+@app.route('/B',methods=['GET'])
+def Backward():
+    motor.move(-0.4,0,0.1)
+    motor.stop(2)
+
+@app.route('/R',methods=['GET'])
+def Right():
+    motor.move(0.4,-0.4,0.1)
+    motor.stop(2)
+
+@app.route('/L',methods=['GET'])
+def Left():
+    motor.move(0.4,0.4,0.1)
+    motor.stop(2)
+
+
+@app.route('/camera')
+def stream():
+    return render_template('index.html') #you can customze index.html here
+
+def gen(camera):
+    #get camera frame
+    while True:
+        frame = camera.get_frame()
+        yield (b'--frame\r\n'
+               b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n\r\n')
+
+@app.route('/video_feed')
+def video_feed():
+    return Response(gen(pi_camera),
+                    mimetype='multipart/x-mixed-replace; boundary=frame')
+
 
 if __name__ == '__main__':
-    app.run(debug=True, port=80, host='0.0.0.0')
+    app.run(debug=False, port=80, host='0.0.0.0')
