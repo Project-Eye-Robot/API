@@ -39,22 +39,23 @@ def off():
 @app.route('/F',methods=['GET'])
 def Forward():
     motor.move(0.4,0,0.1)
+    motor.stop(2)
 
 @app.route('/B',methods=['GET'])
 def Backward():
     motor.move(-0.4,0,0.1)
+    motor.stop(2)
 
 @app.route('/R',methods=['GET'])
 def Right():
     motor.move(0.4,-0.4,0.1)
+    motor.stop(2)
 
 @app.route('/L',methods=['GET'])
 def Left():
     motor.move(0.4,0.4,0.1)
-
-@app.route('/Stop',methods=['GET'])
-def Stop():
     motor.stop(2)
+
 
 @app.route('/camera')
 def stream():
@@ -74,4 +75,4 @@ def video_feed():
 
 
 if __name__ == '__main__':
-    app.run(debug=False, port=80, host='0.0.0.0')
+    app.run(debug=Fa, port=80, host='0.0.0.0')
