@@ -5,6 +5,10 @@ import os
 import threading
 from camera import VideoCamera
 from MotorModule import Motor
+from Buzzer import *
+from LED import *
+from Servo import *
+
 #from picamera import PiCamera
 
 pi_camera = VideoCamera(flip=False)
@@ -18,6 +22,7 @@ motor = Motor(2,3,4,17,27,22)
 
 @app.route('/')
 def index():
+    look_neutral()
     return 'Hello world'
 
 @app.route('/testGet', methods=['GET'])
@@ -28,13 +33,29 @@ def testGet():
 def testPost():
     return request.json['test']
 
-@app.route('/on', methods=['GET'])
-def on():
-    return led.on()
+@app.route('/camera_right', methods=['GET'])
+def camera_look_right():
+    look_right()
 
-@app.route('/off', methods=['GET'])
-def off():
-    return led.off()
+@app.route('/camera_left', methods=['GET'])
+def camera_look_left():
+    look_left()
+
+@app.route('/lightOn', methods=['GET'])
+def RGB_On():
+    purpleOn()
+
+@app.route('/lightOff', methods=['GET'])
+def RGB_Off():
+    purpleOff()
+
+@app.route('/honkOn', methods=['GET'])
+def Buzz_On():
+    BuzzOn()
+
+@app.route('/honkOff', methods=['GET'])
+def Buzz_Off():
+    BuzzOff()
 
 @app.route('/F',methods=['GET'])
 def Forward():
